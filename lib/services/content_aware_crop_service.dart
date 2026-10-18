@@ -72,7 +72,11 @@ class ContentAwareCropService {
     final boxAreaRatio = (rawWidth * rawHeight) / (width * height);
     final foregroundRatio = foregroundSamples / math.max(1, totalSamples);
 
-    if (boxAreaRatio < 0.025 || foregroundRatio < 0.008) {
+    final cropIsTooSmall = boxAreaRatio < 0.025;
+    final foregroundIsTooWeak = foregroundRatio < 0.008;
+    final cropIsAlmostFullImage = boxAreaRatio > 0.88;
+
+    if (cropIsTooSmall || foregroundIsTooWeak || cropIsAlmostFullImage) {
       return AutoCropResult(
         image: source,
         itemDetected: false,
@@ -80,8 +84,8 @@ class ContentAwareCropService {
       );
     }
 
-    final marginX = math.max(12, (rawWidth * 0.05).round());
-    final marginY = math.max(12, (rawHeight * 0.05).round());
+    final marginX = math.max(12, (rawWidth * 0.08).round());
+    final marginY = math.max(12, (rawHeight * 0.08).round());
 
     final cropX = math.max(0, minX - marginX);
     final cropY = math.max(0, minY - marginY);
@@ -171,11 +175,20 @@ class ContentAwareCropService {
     final chroma = maxChannel - minChannel;
 
     final lightBackground = backgroundLuminance >= 175;
+
     if (lightBackground) {
-      return colorDistance >= 52 || darkerBy >= 38 || chroma >= 48;
+      final stronglyColored = chroma >= 32;
+      final veryDarkDetail = darkerBy >= 92;
+      final coloredDifference = colorDistance >= 72 && chroma >= 18;
+
+      return stronglyColored || veryDarkDetail || coloredDifference;
     }
 
-    return colorDistance >= 62 || darkerBy.abs() >= 50 || chroma >= 58;
+    final stronglyColored = chroma >= 44;
+    final strongDifference = colorDistance >= 78;
+    final veryDarkDetail = luminance <= 72;
+
+    return stronglyColored || strongDifference || veryDarkDetail;
   }
 }
 
