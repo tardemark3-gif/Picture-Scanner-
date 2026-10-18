@@ -80,17 +80,6 @@ class _ItemCameraScreenState extends State<ItemCameraScreen> {
       final bytes = await File(captured.path).readAsBytes();
       final cropResult = ContentAwareCropService.crop(bytes);
 
-      if (!cropResult.itemDetected && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Item edges were not clear. Original picture was saved. '
-              'Use a plain light background for better auto-crop.',
-            ),
-          ),
-        );
-      }
-
       final temporaryDirectory = await getTemporaryDirectory();
       final outputPath = path.join(
         temporaryDirectory.path,
@@ -106,8 +95,31 @@ class _ItemCameraScreenState extends State<ItemCameraScreen> {
         await capturedFile.delete();
       }
 
-      if (!mounted) return;
-      Navigator.pop(context, XFile(outputPath));
+      if (!mounted) {
+        return;
+      }
+
+      final activeController = _controller;
+
+      setState(() {
+        _controller = null;
+      });
+
+      if (activeController != null) {
+        await activeController.dispose();
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      await WidgetsBinding.instance.endOfFrame;
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context).pop(XFile(outputPath));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -122,7 +134,9 @@ class _ItemCameraScreenState extends State<ItemCameraScreen> {
 
   @override
   void dispose() {
-    _controller?.dispose();
+    final controller = _controller;
+    _controller = null;
+    controller?.dispose();
     super.dispose();
   }
 
@@ -157,7 +171,11 @@ class _ItemCameraScreenState extends State<ItemCameraScreen> {
       );
     }
 
-    final controller = _controller!;
+    final controller = _controller;
+
+    if (controller == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     return Column(
       children: [
