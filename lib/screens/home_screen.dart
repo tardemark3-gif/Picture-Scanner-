@@ -6,6 +6,7 @@ import '../models/scan_record.dart';
 import '../services/database_service.dart';
 import '../services/excel_export_service.dart';
 import '../services/photo_service.dart';
+import '../services/zip_export_service.dart';
 import 'barcode_scanner_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -178,10 +179,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() => _busy = true);
     try {
-      await ExcelExportService.instance.exportAndShare(
+      await ZipExportService.instance.createAndShareZip(
         _records.reversed.toList(),
       );
-      if (mounted) _showMessage('Excel report created.', success: true);
+      if (mounted) {
+        _showMessage('ZIP with Excel and pictures created.', success: true);
+      }
     } catch (error) {
       if (mounted) _showMessage('Export failed: $error', error: true);
     } finally {
@@ -249,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: FilledButton.icon(
             onPressed: _busy || _records.isEmpty ? null : _exportExcel,
             icon: const Icon(Icons.file_download_outlined),
-            label: Text('EXPORT ${_records.length} RECORDS TO EXCEL'),
+            label: Text('EXPORT ${_records.length} RECORDS TO ZIP'),
           ),
         ),
       ),

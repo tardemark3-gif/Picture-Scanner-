@@ -74,7 +74,7 @@ class ExcelExportService {
       TextCellValue('No.'),
       TextCellValue('Barcode'),
       TextCellValue('Picture Filename'),
-      TextCellValue('Picture Path'),
+      TextCellValue('Picture Reference'),
       TextCellValue('Date Scanned'),
     ]);
 
@@ -83,9 +83,9 @@ class ExcelExportService {
 
       sheet.appendRow([
         IntCellValue(index + 1),
-        TextCellValue(record.barcode),
+        TextCellValue("'${record.barcode}"),
         TextCellValue(record.pictureFilename),
-        TextCellValue(record.picturePath),
+        TextCellValue('Pictures/${record.pictureFilename}'),
         TextCellValue(formatDateTime(record.scannedAt)),
       ]);
     }
