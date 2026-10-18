@@ -2,11 +2,8 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as img;
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
 
-import '../services/content_aware_crop_service.dart';
+import '../services/manual_crop_service.dart';
 
 class ItemCameraScreen extends StatefulWidget {
   const ItemCameraScreen({super.key});
@@ -77,21 +74,24 @@ class _ItemCameraScreenState extends State<ItemCameraScreen> {
 
     try {
       final captured = await controller.takePicture();
-      final bytes = await File(captured.path).readAsBytes();
-      final cropResult = ContentAwareCropService.crop(bytes);
-
-      final temporaryDirectory = await getTemporaryDirectory();
-      final outputPath = path.join(
-        temporaryDirectory.path,
-        'cropped_item_${DateTime.now().microsecondsSinceEpoch}.jpg',
+      final manuallyCropped = await ManualCropService.instance.cropPicture(
+        sourcePath: captured.path,
       );
 
-      await File(
-        outputPath,
-      ).writeAsBytes(img.encodeJpg(cropResult.image, quality: 92), flush: true);
+      if (manuallyCropped == null) {
+        if (mounted) {
+          setState(() {
+            _capturing = false;
+          });
+        }
+        return;
+      }
+
+      final outputPath = manuallyCropped.path;
 
       final capturedFile = File(captured.path);
-      if (await capturedFile.exists()) {
+
+      if (capturedFile.path != outputPath && await capturedFile.exists()) {
         await capturedFile.delete();
       }
 
@@ -192,7 +192,7 @@ class _ItemCameraScreenState extends State<ItemCameraScreen> {
                     right: 20,
                     bottom: 24,
                     child: Text(
-                      'Place one item on a plain background. The app will detect and crop it automatically.',
+                      'Take the full product picture, then adjust the crop box around the item.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
@@ -226,7 +226,7 @@ class _ItemCameraScreenState extends State<ItemCameraScreen> {
                       )
                     : const Icon(Icons.camera_alt_outlined),
                 label: Text(
-                  _capturing ? 'AUTO-CROPPING ITEM...' : 'TAKE ITEM PICTURE',
+                  _capturing ? 'OPENING CROP EDITOR...' : 'TAKE ITEM PICTURE',
                 ),
               ),
             ),
