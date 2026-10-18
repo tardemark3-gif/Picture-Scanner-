@@ -65,21 +65,6 @@ class DatabaseService {
     return rows.map(ScanRecord.fromMap).toList();
   }
 
-  Future<int> countPicturesForBarcode(String barcode) async {
-    final db = await database;
-
-    final result = await db.rawQuery(
-      '''
-      SELECT COUNT(*) AS total
-      FROM scan_records
-      WHERE barcode = ?
-      ''',
-      [barcode],
-    );
-
-    return Sqflite.firstIntValue(result) ?? 0;
-  }
-
   Future<ScanRecord?> getRecordByBarcode(String barcode) async {
     final db = await database;
 
