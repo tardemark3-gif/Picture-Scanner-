@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 import '../models/scan_record.dart';
@@ -8,6 +9,7 @@ import '../services/excel_export_service.dart';
 import '../services/photo_service.dart';
 import '../services/zip_export_service.dart';
 import 'barcode_scanner_screen.dart';
+import 'item_camera_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,6 +38,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<XFile?> _captureItemPicture() {
+    return Navigator.of(
+      context,
+    ).push<XFile>(MaterialPageRoute(builder: (_) => const ItemCameraScreen()));
+  }
+
   Future<void> _scanBarcode() async {
     if (_busy) return;
     final barcode = await Navigator.of(context).push<String>(
@@ -56,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final replace = await _showReplaceDialog(existing);
         if (!mounted || replace != true) return;
 
-        final captured = await PhotoService.instance.takePicture();
+        final captured = await _captureItemPicture();
         if (!mounted || captured == null) {
           _showMessage('Picture capture was cancelled.');
           return;
@@ -76,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      final captured = await PhotoService.instance.takePicture();
+      final captured = await _captureItemPicture();
       if (!mounted || captured == null) {
         _showMessage('Picture capture was cancelled.');
         return;

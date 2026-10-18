@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -11,8 +11,6 @@ class PhotoService {
   PhotoService._();
 
   static final PhotoService instance = PhotoService._();
-
-  final ImagePicker _imagePicker = ImagePicker();
 
   String sanitizeBarcode(String barcode) {
     final cleaned = barcode.trim().replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
@@ -36,14 +34,6 @@ class PhotoService {
 
   Future<ScanRecord?> getExistingRecord(String barcode) async {
     return DatabaseService.instance.getRecordByBarcode(barcode.trim());
-  }
-
-  Future<XFile?> takePicture() async {
-    return _imagePicker.pickImage(
-      source: ImageSource.camera,
-      preferredCameraDevice: CameraDevice.rear,
-      imageQuality: 90,
-    );
   }
 
   Future<ScanRecord> saveNewPicture({
